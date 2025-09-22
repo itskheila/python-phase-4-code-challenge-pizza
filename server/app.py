@@ -25,5 +25,60 @@ def index():
     return "<h1>Code challenge</h1>"
 
 
+# GET /restaurants
+@app.route('/restaurants', methods=['GET'])
+def get_restaurants():
+    restaurants = Restaurant.query.all()
+    return [restaurant.to_dict(only=('id', 'name', 'address')) for restaurant in restaurants]
+
+
+# GET /restaurants/<int:id>
+@app.route('/restaurants/<int:id>', methods=['GET'])
+def get_restaurant(id):
+    restaurant = Restaurant.query.filter(Restaurant.id == id).first()
+    if restaurant:
+        return restaurant.to_dict(only=('id', 'name', 'address', 'restaurant_pizzas'))
+    else:
+        return {'error': 'Restaurant not found'}, 404
+
+
+# DELETE /restaurants/<int:id>
+@app.route('/restaurants/<int:id>', methods=['DELETE'])
+def delete_restaurant(id):
+    restaurant = Restaurant.query.filter(Restaurant.id == id).first()
+    if restaurant:
+        db.session.delete(restaurant)
+        db.session.commit()
+        return '', 204
+    else:
+        return {'error': 'Restaurant not found'}, 404
+
+
+# GET /pizzas
+@app.route('/pizzas', methods=['GET'])
+def get_pizzas():
+    pizzas = Pizza.query.all()
+    return [pizza.to_dict(only=('id', 'name', 'ingredients')) for pizza in pizzas]
+
+
+# POST /restaurant_pizzas
+@app.route('/restaurant_pizzas', methods=['POST'])
+def create_restaurant_pizza():
+    try:
+        data = request.get_json()
+        new_restaurant_pizza = RestaurantPizza(
+            price=data['price'],
+            pizza_id=data['pizza_id'],
+            restaurant_id=data['restaurant_id']
+        )
+        db.session.add(new_restaurant_pizza)
+        db.session.commit()
+        return new_restaurant_pizza.to_dict(), 201
+    except ValueError as e:
+        return {'errors': [str(e)]}, 400
+    except Exception as e:
+        return {'errors': ['validation errors']}, 400
+
+
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
