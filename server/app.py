@@ -75,7 +75,7 @@ def create_restaurant_pizza():
         db.session.commit()
         return new_restaurant_pizza.to_dict(), 201
     except ValueError as e:
-        return {'errors': [str(e)]}, 400
+        return {'errors': ['validation errors']}, 400
     except Exception as e:
         return {'errors': ['validation errors']}, 400
 
